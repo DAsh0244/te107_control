@@ -1,0 +1,45 @@
+Description,SCPI Command,SCPI Values,R/W,,Comments
+Query Comm. Temperature units,:UNIT:TEMPERATURE?,C|F,R,Ethernet display units
+Set Comm. Temperature units to F,:UNIT:TEMPERATURE F,W,,Ethernet display units to Fahrenheit
+Set Comm. Temperature units to C,:UNIT:TEMPERATURE C,W,,Ethernet display units to Celsius
+Query Display Temperature units,:UNIT:TEMPERATURE:DISPLAY?,C|F,R,Front panel display units
+Set Display Temperature units to F,:UNIT:TEMPERATURE:DISPLAY F,W,,Front panel display units to Fahrenheit
+Set Display Temperature units to C,:UNIT:TEMPERATURE:DISPLAY C,W,,Front panel display units to Celsius
+# This list is NOT for versions with Cascade Control (Part Temperature Control).
+# It is only for standard Temperature or Temperature/Humidity controllers. 
+Read Temperature PV (Control loop),:SOURCE:CLOOP#:PVALUE?,<floating point value>,R,Source Value A
+Query input error,:SOURCE:CLOOP#:ERROR?,ERROR|NONE,R,Input error status
+Read SP,:SOURCE:CLOOP#:SPOINT?,<floating point value>,R,Set Point Active Closed
+Write SP,:SOURCE:CLOOP#:SPOINT <value>,W,,User Set Point
+Read Idle SP,:SOURCE:CLOOP#:IDLE?,<floating point value>,R,Idle Set Point
+Write Idle SP,:SOURCE:CLOOP#:IDLE <value>,W,,Idle Set Point,
+# This list is ONLY for versions WITH Cascade Control (Part Temperature Control)
+Read Set Point (Cascade),:SOURCE:CASCADE1:SPOINT?,<floating point value>,R,User set point
+Write Set Point (Cascade),:SOURCE:CASCADE1:SPOINT <value>,W,User set point
+Read Outer Loop PV (Cascade),:SOURCE:CASCADE1:OUTER:PVALUE?,<floating point value>,R,Source Value A
+Query Outer Loop Input Error (Cascade),:SOURCE:CASCADE1:OUTER:ERROR?,ERROR|NONE,R,Input error status
+Read Inner Loop PV (Cascade),:SOURCE:CASCADE1:INNER:PVALUE?<floating point value>,R,Source Value B
+Query Outer Loop Input Error (Cascade),:SOURCE:CASCADE1:INNER:ERROR?,ERROR|NONE,R,Input error status
+Read Outer Loop Set Point (Cascade),:SOURCE:CASCADE1:OUTER:SPOINT?,<floating point value>,R
+Read Inner Loop Set Point (Cascade),:SOURCE:CASCADE1:INNER:SPOINT?,<floating point value>,R
+Set ramping off,:SOURCE:CLOOP#:RACTION OFF,W,controls instantly to set point
+Set ramping on startup,:SOURCE:CLOOP#:RACTION STARTUP,W,ramps to set point on controller power on
+Set ramping on set point change,:SOURCE:CLOOP#:RACTION SETPOINT,W,ramps to set point on change of set point
+Set ramping on both events,:SOURCE:CLOOP#:RACTION BOTH,W,ramps to set point on controller power on OR change of set point
+Write ramp scale to minutes,:SOURCE:CLOOP#:RSCALE MINUTES,W,ramp rate is per minute
+Write ramp scale to hours,:SOURCE:CLOOP#:RSCALE HOURS,W,ramp rate is per hour
+Read ramp rate,:SOURCE:CLOOP#:RRATE?,<floating point value>,R,rate that controller ramps to set point
+Read ramp time,:SOURCE:CLOOP#:RTIME?,<floating point value>,R,time that controller ramps to set point
+Write ramp rate,:SOURCE:CLOOP#:RRATE <value>,W,rate that controller ramps to set point
+Read ramp time,:SOURCE:CLOOP#:RTIME <value>,W,rate that controller ramps to set point
+Set event output on,:OUTPUT#:STATE ON,W,# = outputs 1-7
+Set event output off,:OUTPUT#:STATE OFF,W,# = outputs 1-7
+Query event output state,:OUTPUT#:STATE?,OFF|ON,R,# = outputs 1-7
+Select a profile,:PROGRAM:NUMBER <value>,1-40,W,selects the desired profile to control
+Read selected profile name,:PROGRAM:NAME?,<string value>,R,the selected profile
+Select a step,:PROGRAM:STEP <value>,1-50,W,the selected profile
+start profile,:PROGRAM:SELECTED:STATE START,W,the selected profile
+stop profile,:PROGRAM:SELECTED:STATE STOP,W,the selected profile
+pause profile,:PROGRAM: SELECTED:STATE PAUSE,W,the selected profile
+resume profile,:PROGRAM: SELECTED:STATE RESUME,W,the selected profile
+Identification,*IDN?,"Watlow Electric",<string value>,<integer value>,<string value>
