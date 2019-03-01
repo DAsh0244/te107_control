@@ -32,8 +32,9 @@ class Device:
 
     def _clear_buffer(self):
         res = self._conn.recv(BUF_CHUNK)
-        while res:
-            res = self._conn.recv(BUF_CHUNK)
+        print(res)
+        # while res:
+        res = self._conn.recv(BUF_CHUNK)
 
     def _readline(self):
         msg = bytearray(BUF_CHUNK)
@@ -49,7 +50,7 @@ class Device:
         self._clear_buffer()
         self.send_cmd('*IDN?')
         id = self._conn.recv(BUF_CHUNK).strip()
-        self._id = id
+        self._id = self._readline()
         return id 
 
     def __del__(self):
