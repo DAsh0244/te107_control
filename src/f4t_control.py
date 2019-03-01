@@ -42,9 +42,12 @@ class Device:
             msg.extend(self._conn.recv(BUF_CHUNK))
         return msg.decode(self.encoding).strip()
 
+    def send_cmd(self,cmd:str):
+        self._conn.send(cmd.encode(self.encoding)+self.EOL)
+
     def get_id(self):
         self._clear_buffer()
-        self._conn.send('*IDN?')
+        self.send_cmd('*IDN?')
         id = self._conn.recv(BUF_CHUNK).strip()
         self._id = id
         return id 
@@ -54,31 +57,31 @@ class Device:
 
 class F4TController (Device):
     def __init__(self, set_point:float=22.0, units:TempUnits=TempUnits.C, profile:int=1,*args,**kwargs):
-        super().__init__()
+        super().__init__(*args,**kwargs)
         self.set_point = set_point
         self.temp_units = units
         self.current_profile = profile
     
     def get_units(self):
         self._clear_buffer()
-        self._conn.send(':UNIT:TEMPERATURE?\n')
+        self.send_cmd(':UNIT:TEMPERATURE?')
         resp = self._readline()
         self.temp_units = TempUnits(resp)        
 
     def set_units(self, units:TempUnits=None):
         if units is None:
             units = self.temp_units
-        self._conn.send(':UNITS:TEMPERATURE {}'.format(units.value))
+        self.send_cmd(':UNITS:TEMPERATURE {}'.format(units.value))
 
     def select_profile(self, profile:int):
         # assert profile =< 40 and profile >= 1
-        self._conn.send(':PROGRAM:NUMBER {}\n'.format(profile))
+        self.send_cmd(':PROGRAM:NUMBER {}\n'.format(profile))
     
     def run_profile(self):
-        self._conn.send(':PROGRAM:SELECTED:STATE START\n')
+        self.send_cmd(':PROGRAM:SELECTED:STATE START\n')
 
     def stop_profile(self):
-        self._conn.send(':PROGRAM:SELECTED:STATE STOP\n')
+        self.send_cmd(':PROGRAM:SELECTED:STATE STOP\n')
 
     def get_temperature(self):
         pass
