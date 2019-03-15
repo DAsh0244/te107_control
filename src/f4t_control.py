@@ -20,21 +20,29 @@ class Device:
         assert issubclass(cls, dev)
         return cls(dev.host,dev.port,conn=dev._conn,id=dev._id)
 
-    def __init__(self, host, port=5025,*args, **kwargs):
+    def __init__(self, host, port=5025,timeout=None,*args, **kwargs):
         self._host = host
         self._port = port
-        self._conn = kwargs.get('conn', _socket.create_connection((self._host,self._port)))
+        self.timeout = timeout
+        print('making conn {}:{}'.format(host,port))
+        self._conn = kwargs.get('conn', _socket.create_connection((self._host,self._port),timeout=timeout))
+        print('made conn')
         self._id = kwargs.get('id', None)
         self.encoding = kwargs.get('encoding', 'ascii')
         self.EOL = b'\n'
+        print('getting id')
         if self._id is None:
             self.get_id()
 
     def _clear_buffer(self):
-        res = self._conn.recv(BUF_CHUNK)
-        print(res)
-        # while res:
-        res = self._conn.recv(BUF_CHUNK)
+        self._conn.settimeout(self.timeout)
+        try:
+            res = self._conn.recv(BUF_CHUNK)
+            print(res)
+            # while res:
+            res = self._conn.recv(BUF_CHUNK)
+        except _socket.timeout:
+            pass
 
     def _readline(self):
         msg = bytearray(BUF_CHUNK)
@@ -47,11 +55,14 @@ class Device:
         self._conn.send(cmd.encode(self.encoding)+self.EOL)
 
     def get_id(self):
+        print('clearing_buff')
         self._clear_buffer()
+        print('asking ID')
         self.send_cmd('*IDN?')
-        id = self._conn.recv(BUF_CHUNK).strip()
+        print('reading response')
         self._id = self._readline()
-        return id 
+        print('got id ',self._id)
+        return self._id 
 
     def __del__(self):
         self._conn.close()
@@ -62,6 +73,7 @@ class F4TController (Device):
         self.set_point = set_point
         self.temp_units = units
         self.current_profile = profile
+        self.timeout = 1.0
     
     def get_units(self):
         self._clear_buffer()
