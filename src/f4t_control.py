@@ -2,7 +2,7 @@
 import socket as _socket
 from enum import Enum as _Enum
 
-BUF_CHUNK = 1024
+BUF_CHUNK = 10
 
 class TempUnits(_Enum):
     C = 'C'
@@ -40,15 +40,22 @@ class Device:
             res = self._conn.recv(BUF_CHUNK)
             print(res)
             # while res:
-            res = self._conn.recv(BUF_CHUNK)
+            # res = self._conn.recv(BUF_CHUNK)
         except _socket.timeout:
             pass
 
     def _readline(self):
-        msg = bytearray(BUF_CHUNK)
-        self._conn.recv_into(msg,BUF_CHUNK)
-        while msg[:-1] != ord(self.EOL):
-            msg.extend(self._conn.recv(BUF_CHUNK))
+        msg = b'FAILED'
+        try:
+            msg = bytearray(self._conn.recv(BUF_CHUNK))
+            # print(msg)
+            while msg[-1] != ord(self.EOL):
+                # print('next chunk')
+                msg.extend(self._conn.recv(BUF_CHUNK))
+                # print(msg)
+        except _socket.timeout:
+            pass
+        print('return')
         return msg.decode(self.encoding).strip()
 
     def send_cmd(self,cmd:str):
@@ -67,6 +74,7 @@ class Device:
     def __del__(self):
         self._conn.close()
 
+from time import sleep
 class F4TController (Device):
     def __init__(self, set_point:float=22.0, units:TempUnits=TempUnits.C, profile:int=1,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -74,7 +82,21 @@ class F4TController (Device):
         self.temp_units = units
         self.current_profile = profile
         self.timeout = 1.0
+        self.profiles = {}
     
+    def get_profiles(self):
+        for i in range(1,40):
+            self.select_profile(i)
+            sleep(0.5)
+            self.send_cmd(':PROGRAM:NAME?')
+            sleep(0.5)
+            name = self._readline().strip()
+            # print(name)
+            if name:
+                self.profiles[i] = name
+            else:
+                break
+
     def get_units(self):
         self._clear_buffer()
         self.send_cmd(':UNIT:TEMPERATURE?')
@@ -88,13 +110,25 @@ class F4TController (Device):
 
     def select_profile(self, profile:int):
         # assert profile =< 40 and profile >= 1
-        self.send_cmd(':PROGRAM:NUMBER {}\n'.format(profile))
+        self.send_cmd(':PROGRAM:NUMBER {}'.format(profile))
     
     def run_profile(self):
-        self.send_cmd(':PROGRAM:SELECTED:STATE START\n')
+        self.send_cmd(':PROGRAM:SELECTED:STATE START')
 
     def stop_profile(self):
-        self.send_cmd(':PROGRAM:SELECTED:STATE STOP\n')
+        self.send_cmd(':PROGRAM:SELECTED:STATE STOP')
 
     def get_temperature(self):
-        pass
+        self.send_cmd(':SOURCE:CLOOP{}:PVALUE?'.format(1))
+        return self._readline()
+
+    def set_temperature(self,temp):
+        self.send_cmd('SOURCE:CLOOP{}:SPOINT {}'.format(1,temp))
+
+
+if __name__ == "__main__":
+    x = F4TController(host='169.254.250.143',timeout=1)
+    x.get_units()
+    print(x.get_temperature())
+    print(x.temp_units)
+    x.set_temperature(22.0)
