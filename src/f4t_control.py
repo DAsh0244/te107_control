@@ -26,11 +26,9 @@ class Device:
         self.timeout = timeout
         print('making conn {}:{}'.format(host,port))
         self._conn = kwargs.get('conn', _socket.create_connection((self._host,self._port),timeout=timeout))
-        print('made conn')
         self._id = kwargs.get('id', None)
         self.encoding = kwargs.get('encoding', 'ascii')
         self.EOL = b'\n'
-        print('getting id')
         if self._id is None:
             self.get_id()
 
@@ -55,20 +53,20 @@ class Device:
                 # print(msg)
         except _socket.timeout:
             pass
-        print('return')
+        # print('return')
         return msg.decode(self.encoding).strip()
 
     def send_cmd(self,cmd:str):
         self._conn.send(cmd.encode(self.encoding)+self.EOL)
 
     def get_id(self):
-        print('clearing_buff')
+        # print('clearing_buff')
         self._clear_buffer()
-        print('asking ID')
+        # print('asking ID')
         self.send_cmd('*IDN?')
-        print('reading response')
+        # print('reading response')
         self._id = self._readline()
-        print('got id ',self._id)
+        # print('got id ',self._id)
         return self._id 
 
     def __del__(self):
@@ -81,16 +79,17 @@ class F4TController (Device):
         self.set_point = set_point
         self.temp_units = units
         self.current_profile = profile
-        self.timeout = 1.0
+        self.timeout = 1.5
         self.profiles = {}
     
     def get_profiles(self):
+        # doesnt work if profile is running
         for i in range(1,40):
             self.select_profile(i)
             sleep(0.5)
             self.send_cmd(':PROGRAM:NAME?')
             sleep(0.5)
-            name = self._readline().strip()
+            name = self._readline().strip().replace('"','')
             # print(name)
             if name:
                 self.profiles[i] = name
@@ -125,10 +124,47 @@ class F4TController (Device):
     def set_temperature(self,temp):
         self.send_cmd('SOURCE:CLOOP{}:SPOINT {}'.format(1,temp))
 
+    def is_done(self,ouput_num):
+        self.send_cmd(':OUTPUT{}:STATE?'.format(ouput_num))
+        sleep(0.2)
+        resp = self._readline()
+        status = None
+        if resp == 'ON':
+            status = True
+        elif resp == 'OFF':
+            status = False
+        return status
+
+    def set_output(self,output_num,state):
+        self.send_cmd(':OUTPUT{}:STATE {}'.format(output_num,state))
 
 if __name__ == "__main__":
     x = F4TController(host='169.254.250.143',timeout=1)
-    x.get_units()
-    print(x.get_temperature())
-    print(x.temp_units)
-    x.set_temperature(22.0)
+    # x.get_units()
+    # print(x.get_temperature())
+    # print(x.temp_units)
+    # x.get_profiles()
+    # print(x.profiles)
+    # x.set_temperature(5)
+    # x.send_cmd(':SOURCE:CLOOP1:SPOINT?') 
+    # sleep(0.2)
+    # print(x._readline())
+    # x.set_output(1,'ON')
+    # x.set_temperature(50)
+    # 1 is 5 - 125
+    x.select_profile(1)
+    sleep(0.5)
+    x.send_cmd(':PROGRAM:NAME?')
+    sleep(0.5)
+    print(x._readline().strip())
+    x.run_profile()
+    sleep(0.5)
+    try:
+        while True:
+            print(x.get_temperature())
+            sleep(1)
+    except KeyboardInterrupt:
+        pass 
+    print('done')
+
+    # x.set_temperature(22.0)
