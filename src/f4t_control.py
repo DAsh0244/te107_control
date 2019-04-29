@@ -8,6 +8,9 @@ class TempUnits(_Enum):
     C = 'C'
     F = 'F'
 
+class RampScale(_Enum):
+    MINUTES = 'MINUTES'
+    HOURE = 'HOURS'
 
 class Device:
     """
@@ -107,6 +110,16 @@ class F4TController (Device):
             units = self.temp_units
         self.send_cmd(':UNITS:TEMPERATURE {}'.format(units.value))
 
+    def set_ramp_scale(self,ramp_scale,cloop=1):
+        scale = RampScale(ramp_scale)
+        self.send_cmd(':SOURCE:CLOOP{}:RSCALE {}'.format(cloop,scale))
+
+    def set_ramp_rate(self,ramp_rate,cloop=1):
+        self.send_cmd(':SOURCE:CLOOP{}:RRATE {}'.format(cloop,ramp_rate))
+
+    def set_ramp_time(self,ramp_time,cloop=1):
+        self.send_cmd(':SOURCE:CLOOP{}:RTIME {}'.format(cloop,ramp_time))
+
     def select_profile(self, profile:int):
         # assert profile =< 40 and profile >= 1
         self.send_cmd(':PROGRAM:NUMBER {}'.format(profile))
@@ -117,12 +130,12 @@ class F4TController (Device):
     def stop_profile(self):
         self.send_cmd(':PROGRAM:SELECTED:STATE STOP')
 
-    def get_temperature(self):
-        self.send_cmd(':SOURCE:CLOOP{}:PVALUE?'.format(1))
+    def get_temperature(self,cloop=1):
+        self.send_cmd(':SOURCE:CLOOP{}:PVALUE?'.format(cloop))
         return self._readline()
 
-    def set_temperature(self,temp):
-        self.send_cmd('SOURCE:CLOOP{}:SPOINT {}'.format(1,temp))
+    def set_temperature(self,temp,cloop=1):
+        self.send_cmd('SOURCE:CLOOP{}:SPOINT {}'.format(cloop,temp))
 
     def is_done(self,ouput_num):
         self.send_cmd(':OUTPUT{}:STATE?'.format(ouput_num))
@@ -137,14 +150,21 @@ class F4TController (Device):
 
     def set_output(self,output_num,state):
         self.send_cmd(':OUTPUT{}:STATE {}'.format(output_num,state))
+ 
 
 if __name__ == "__main__":
+    start = 5
+    stop = 125
+    step = 5
+    ramp_time_min = 3.0
+    soak_time_min = 7.0
+    temps = range(start,stop+step,step)
     x = F4TController(host='169.254.250.143',timeout=1)
     # x.get_units()
     # print(x.get_temperature())
     # print(x.temp_units)
-    # x.get_profiles()
-    # print(x.profiles)
+    x.get_profiles()
+    print(x.profiles)
     # x.set_temperature(5)
     # x.send_cmd(':SOURCE:CLOOP1:SPOINT?') 
     # sleep(0.2)
@@ -152,13 +172,23 @@ if __name__ == "__main__":
     # x.set_output(1,'ON')
     # x.set_temperature(50)
     # 1 is 5 - 125
-    x.select_profile(1)
+    # x.select_profile(1)
     sleep(0.5)
     x.send_cmd(':PROGRAM:NAME?')
     sleep(0.5)
     print(x._readline().strip())
-    x.run_profile()
-    sleep(0.5)
+    x.set_ramp_time(ramp_time_min)
+    x.set_ramp_scale(RampScale.MINUTES)
+    for temp in temps:
+        x.set_temperature(temp)
+        sleep(ramp_time_min*60)
+        while abs(x.get_temperature() - temp) > 0.2:
+            sleep(1.0)
+        # begin soak
+        print('beginning soak at temp {}'.format(x.get_temperature()))
+        sleep(soak_time_min*60)
+    # x.run_profile()
+    # sleep(0.5)
     try:
         while True:
             print(x.get_temperature())
