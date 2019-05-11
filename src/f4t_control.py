@@ -10,7 +10,7 @@ class TempUnits(_Enum):
 
 class RampScale(_Enum):
     MINUTES = 'MINUTES'
-    HOURE = 'HOURS'
+    HOURS = 'HOURS'
 
 class Device:
     """

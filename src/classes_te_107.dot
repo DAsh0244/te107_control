@@ -1,0 +1,9 @@
+digraph "classes_te_107" {
+charset="utf-8"
+rankdir=BT
+"0" [label="{f4t_control.Device|EOL : bytes\l_conn\l_host\l_id : str\l_port : int\lencoding\ltimeout : NoneType\l|__del__()\l__init__()\l_clear_buffer()\l_readline()\lfrom_other_dev()\lget_id()\lsend_cmd()\l}", shape="record"];
+"1" [label="{f4t_control.F4TController|current_profile : int\lprofiles : dict\lset_point : float\ltemp_units : str\ltimeout : float\l|__init__()\lget_profiles()\lget_temperature()\lget_units()\lis_done()\lrun_profile()\lselect_profile()\lset_output()\lset_ramp_rate()\lset_ramp_scale()\lset_ramp_time()\lset_temperature()\lset_units()\lstop_profile()\l}", shape="record"];
+"2" [label="{f4t_control.RampScale|HOURS : str\lMINUTES : str\l}", shape="record"];
+"3" [label="{f4t_control.TempUnits|C : str\lF : str\l}", shape="record"];
+"1" -> "0" [arrowhead="empty", arrowtail="none"];
+}
