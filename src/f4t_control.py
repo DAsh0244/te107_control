@@ -2,6 +2,7 @@
 from time import sleep as _sleep
 import socket as _socket
 from enum import Enum as _Enum
+from atexit import register, unregister
 
 # Buffer size to scan for when recieveing over the socket 
 BUF_CHUNK = 10
@@ -41,6 +42,7 @@ class Device:
         self.EOL = b'\n'
         if self._id is None:
             self.get_id()
+        register(self._conn.close)
 
     def _clear_buffer(self):
         self._conn.settimeout(self.timeout)
@@ -80,6 +82,7 @@ class Device:
         return self._id 
 
     def __del__(self):
+        unregister(self._conn.close)
         self._conn.close()
 
 class F4TController (Device):

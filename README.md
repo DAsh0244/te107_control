@@ -45,7 +45,7 @@ x = F4TController(host='169.254.250.143',timeout=1)
 x.set_ramp_time(ramp_time_min)
 x.set_ramp_scale(RampScale.MINUTES)
 # ensure chamber is enabled:
- x.set_output(1,'ON')
+x.set_output(1,'ON')
 # ensure units 
 x.set_units(temp_units)
 
@@ -59,6 +59,12 @@ for temp in temps:
     # begin soak
     print('beginning soak at temp {}'.format(x.get_temperature()))
     sleep(soak_time_min*60)
+
+# turn off unit
+print('completed sweep!')
+x.set_output(1,'OFF')
+x.set_temperature(22)
+# cleanup for socket connection is handled automatically
 ```
 
 ## TODO:
