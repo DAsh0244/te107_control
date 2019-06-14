@@ -88,7 +88,8 @@ class F4TController (Device):
         self.set_point = set_point
         self.temp_units = units
         self.current_profile = profile
-        self.timeout = 1.5
+        if self.timeout is None:
+            self.timeout = 1.5
         self.profiles = {}
     
     def get_profiles(self):
