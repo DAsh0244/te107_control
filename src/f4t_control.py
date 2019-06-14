@@ -1,14 +1,22 @@
 
+from time import sleep as _sleep
 import socket as _socket
 from enum import Enum as _Enum
 
+# Buffer size to scan for when recieveing over the socket 
 BUF_CHUNK = 10
 
 class TempUnits(_Enum):
+    """
+    Enumeration class to represent Temperature Units of the controller
+    """
     C = 'C'
     F = 'F'
 
 class RampScale(_Enum):
+    """
+    Enumeration class to represent The timescale for the Ramp commands of to controller
+    """
     MINUTES = 'MINUTES'
     HOURS = 'HOURS'
 
@@ -16,7 +24,6 @@ class Device:
     """
     Generic socket connected device
     """
-
     @classmethod
     def from_other_dev(cls, dev):
         """Factory function for generating a new instance of the object as a more specific subclass"""
@@ -27,7 +34,7 @@ class Device:
         self._host = host
         self._port = port
         self.timeout = timeout
-        print('making conn {}:{}'.format(host,port))
+        # print('making conn {}:{}'.format(host,port))
         self._conn = kwargs.get('conn', _socket.create_connection((self._host,self._port),timeout=timeout))
         self._id = kwargs.get('id', None)
         self.encoding = kwargs.get('encoding', 'ascii')
@@ -75,7 +82,6 @@ class Device:
     def __del__(self):
         self._conn.close()
 
-from time import sleep
 class F4TController (Device):
     def __init__(self, set_point:float=22.0, units:TempUnits=TempUnits.C, profile:int=1,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -89,9 +95,9 @@ class F4TController (Device):
         # doesnt work if profile is running
         for i in range(1,40):
             self.select_profile(i)
-            sleep(0.5)
+            _sleep(0.5)
             self.send_cmd(':PROGRAM:NAME?')
-            sleep(0.5)
+            _sleep(0.5)
             name = self._readline().strip().replace('"','')
             # print(name)
             if name:
@@ -139,7 +145,7 @@ class F4TController (Device):
 
     def is_done(self,ouput_num):
         self.send_cmd(':OUTPUT{}:STATE?'.format(ouput_num))
-        sleep(0.2)
+        _sleep(0.2)
         resp = self._readline()
         status = None
         if resp == 'ON':
@@ -173,26 +179,26 @@ if __name__ == "__main__":
     # x.set_temperature(50)
     # 1 is 5 - 125
     # x.select_profile(1)
-    sleep(0.5)
+    _sleep(0.5)
     x.send_cmd(':PROGRAM:NAME?')
-    sleep(0.5)
+    _sleep(0.5)
     print(x._readline().strip())
     x.set_ramp_time(ramp_time_min)
     x.set_ramp_scale(RampScale.MINUTES)
     for temp in temps:
         x.set_temperature(temp)
-        sleep(ramp_time_min*60)
+        _sleep(ramp_time_min*60)
         while abs(x.get_temperature() - temp) > 0.2:
-            sleep(1.0)
+            _sleep(1.0)
         # begin soak
         print('beginning soak at temp {}'.format(x.get_temperature()))
-        sleep(soak_time_min*60)
+        _sleep(soak_time_min*60)
     # x.run_profile()
     # sleep(0.5)
     try:
         while True:
             print(x.get_temperature())
-            sleep(1)
+            _sleep(1)
     except KeyboardInterrupt:
         pass 
     print('done')
